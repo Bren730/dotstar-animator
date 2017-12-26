@@ -20,13 +20,13 @@ class DotstarAnimator
     // FadeIn variables
     uint32_t fadeInAnimTime;
     uint32_t fadeInStartTime;
-    bool _didFadeIn = false;
+    bool _didFadeIn = true;
 
     // WipeIn variables
     uint32_t wipeInAnimTime;
     uint32_t wipeInStartTime;
     float wipeLength;
-    bool _didWipeIn = false;
+    bool _didWipeIn = true;
 
     const uint8_t PROGMEM gamma8[256] = {
     0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,

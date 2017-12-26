@@ -71,39 +71,46 @@ void DotstarAnimator::setStripBrightness(float perc)
 
 void DotstarAnimator::fadeIn(uint32_t animTime, byte colors[][3], uint16_t dataLen)
 {
-  fadeInAnimTime = animTime;
-  createGradient(colors, dataLen);
-  fadeInStartTime = millis();
-  _didFadeIn = false;
+  if (_didFadeIn)
+  {
+    fadeInAnimTime = animTime;
+    createGradient(colors, dataLen);
+    fadeInStartTime = millis();
+    _didFadeIn = false;
+  }
 
 }
 
 void DotstarAnimator::wipeIn(uint32_t animTime, float wipeLen, byte colors[][3], uint16_t dataLen)
 {
-  wipeInAnimTime = animTime;
-  wipeLength = wipeLen;
-  createGradient(colors, dataLen);
-  wipeInStartTime = millis();
-  _didWipeIn = false;
+  if (_didWipeIn)
+  {
+    wipeInAnimTime = animTime;
+    wipeLength = wipeLen;
+    createGradient(colors, dataLen);
+    wipeInStartTime = millis();
+    _didWipeIn = false;
+  }
+
 }
 
 void DotstarAnimator::invalidateWipeMask(float perc)
 {
-  
+
   float gradientPerc = perc * wipeLength;
   float gradientPercHead = gradientPerc + perc;
-  
+
   for (uint16_t i = 0; i < NUMPIXELS; i++)
   {
     float pixelPos = (float)i / NUMPIXELS;
-    float factor = -(1/wipeLength) * (pixelPos - gradientPercHead);
+    float factor = -(1 / wipeLength) * (pixelPos - gradientPercHead);
 
-//    Serial.println(gradientPerc);
-//    Serial.println(gradientPercHead);
-//    Serial.println(pixelPos);
-//    Serial.println(factor);
-//    Serial.println();
-    
+    //    Serial.println(gradientPerc);
+    //    Serial.println(gradientPercHead);
+    //    Serial.println(pixelPos);
+    //    Serial.println(factor);
+    //    Serial.println();
+
     if (factor <= 1 && factor >= 0)
     {
       outputGradient[i][0] = (float)gradient1[i][0] * factor;
