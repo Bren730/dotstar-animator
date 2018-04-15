@@ -6,7 +6,7 @@
 #include <Adafruit_NeoPixel.h>
 #include <Adafruit_DotStar.h>
 
-#define NUMPIXELS 60
+#define NUMPIXELS 91
 
 enum GradientType
 {
@@ -60,15 +60,20 @@ class DotstarAnimator
     GradientType _gradientType;
 
     // FadeIn variables
+    float fadeInProgress;
     uint32_t fadeInAnimTime;
     uint32_t fadeInStartTime;
     bool _didFadeIn = true;
 
     // WipeIn variables
+    float wipeInProgress;
     uint32_t wipeInAnimTime;
     uint32_t wipeInStartTime;
-    float wipeLength;
+    float wipeInFeatherLength;
     bool _didWipeIn = true;
+    byte wipeInSmoothingFrames = 1;
+    float wipeInValues[255];
+    byte wipeInSmoothingIndex = 0;
 
     // StaticGradient variables
     StaticGradientConfig staticGradientConfig;
@@ -102,7 +107,7 @@ class DotstarAnimator
     DotstarAnimator();
 
     //    Adafruit_NeoPixel neoPixel = Adafruit_NeoPixel(60, 6, NEO_RGBW + NEO_KHZ800);
-    Adafruit_DotStar dotStar = Adafruit_DotStar(60, 4, 5, DOTSTAR_BRG);
+    Adafruit_DotStar dotStar = Adafruit_DotStar(NUMPIXELS, 7, 6, DOTSTAR_BRG);
 
     void updateDotstar();
     void invalidate();
@@ -123,9 +128,18 @@ class DotstarAnimator
 
     //getters and setters
     bool didFadeIn();
+    void setFadeInCompleted(bool fadeInCompleted);
+    
+    bool didWipeIn();
+    void setWipeInCompleted(bool wipeInCompleted);
+    void setWipeInFeatherLength(float _wipeInFeatherLength);
+    void setWipeInSmoothing(uint16_t _smoothingFrames);
+    
     GradientType getGradientType();
     float getFadeInProgress();
     float getWipeInProgress();
+    void setWipeInProgress(float _wipeInProgress);
+
 };
 
 #endif

@@ -34,10 +34,12 @@ void DotstarAnimator::updateDotstar()
     outputGradient[i][2] = gradient1[i][2];
   }
 
-  if (!_didWipeIn || !_didFadeIn)
-  {
-    invalidateMask();
-  }
+  //  if (!_didWipeIn || !_didFadeIn)
+  //  {
+  //    invalidateMask();
+  //  }
+
+  invalidateMask();
 
   invalidate();
 }
@@ -66,29 +68,87 @@ float DotstarAnimator::getFadeInProgress()
   return progress;
 }
 
+void DotstarAnimator::setWipeInFeatherLength(float _wipeInFeatherLength)
+{
+  wipeInFeatherLength = _wipeInFeatherLength;
+}
+
 float DotstarAnimator::getWipeInProgress()
 {
-  float progress = (float)(millis() - wipeInStartTime) / (float)wipeInAnimTime;
-
-  if (progress >= 1.0 && !_didWipeIn)
+  if (!didWipeIn())
   {
-    progress = 1.0;
-    _didWipeIn = true;
+    //    Serial.println("animated wipeIn not completed yet");
+    float progress = (float)(millis() - wipeInStartTime) / (float)wipeInAnimTime;
 
-    Serial.println("wipeIn completed");
+    if (progress >= 1.0 && !_didWipeIn)
+    {
+      progress = 1.0;
+      _didWipeIn = true;
+
+      Serial.println("wipeIn completed");
+    }
+
+    if (progress <= 0.0)
+    {
+      progress = 0.0;
+    }
+
+    if (_didWipeIn)
+    {
+      progress = 1.0;
+    }
+
+    return progress;
+  }
+  else
+  {
+    float prog = 0;
+    for (byte i = 0; i < wipeInSmoothingFrames; i++)
+    {
+      //    Serial.println("Wipe in value at " + String(i) + ": " + String(wipeInValues[i]));
+      prog += wipeInValues[i];
+    }
+
+    prog = prog / wipeInSmoothingFrames;
+    setWipeInProgress(prog);
+
+//    Serial.println(prog);
+
+    return prog;
   }
 
-  if (progress <= 0.0)
-  {
-    progress = 0.0;
-  }
+}
 
-  if (_didWipeIn)
+void DotstarAnimator::setWipeInProgress(float _wipeInProgress)
+{
+  if (wipeInSmoothingIndex >= wipeInSmoothingFrames)
   {
-    progress = 1.0;
+    wipeInSmoothingIndex = 0;
   }
+  wipeInValues[wipeInSmoothingIndex] = _wipeInProgress;
+  //  Serial.println("Last value " + String(wipeInValues[wipeInSmoothingIndex]));
+  //  Serial.println("Smoothing index " + String(wipeInSmoothingIndex));
 
-  return progress;
+  float prog = 0;
+
+  for (byte i = 0; i < wipeInSmoothingFrames; i++)
+  {
+    //    Serial.println("Wipe in value at " + String(i) + ": " + String(wipeInValues[i]));
+    prog += wipeInValues[i];
+  }
+  //  Serial.println("progress: " + String(prog));
+
+  prog = prog / (float)wipeInSmoothingFrames;
+
+  wipeInProgress = prog;
+  _didWipeIn = true;
+
+  wipeInSmoothingIndex++;
+}
+
+void DotstarAnimator::setWipeInSmoothing(uint16_t _smoothingFrames)
+{
+  wipeInSmoothingFrames = _smoothingFrames;
 }
 
 void DotstarAnimator::invalidate()
@@ -131,7 +191,7 @@ void DotstarAnimator::wipeIn(uint32_t animTime, float wipeLen)
   if (_didWipeIn)
   {
     wipeInAnimTime = animTime;
-    wipeLength = wipeLen;
+    wipeInFeatherLength = wipeLen;
     //    createGradient(colors, dataLen);
     wipeInStartTime = millis();
     _didWipeIn = false;
@@ -143,19 +203,19 @@ void DotstarAnimator::invalidateMask()
 {
   float wipeProgress = getWipeInProgress();
   float brightness = getFadeInProgress();
-  float gradientPerc = wipeProgress * wipeLength;
+  float gradientPerc = wipeProgress * wipeInFeatherLength;
   float gradientPercHead = gradientPerc + wipeProgress;
 
   for (uint16_t i = 0; i < NUMPIXELS; i++)
   {
     float pixelPos = (float)i / NUMPIXELS;
-    float factor = -(1 / wipeLength) * (pixelPos - gradientPercHead);
+    float factor = -(1 / wipeInFeatherLength) * (pixelPos - gradientPercHead);
 
-//    Serial.println(gradientPerc);
-//    Serial.println(gradientPercHead);
-//    Serial.println(pixelPos);
-//    Serial.println(factor);
-//    Serial.println();
+    //    Serial.println(gradientPerc);
+    //    Serial.println(gradientPercHead);
+    //    Serial.println(pixelPos);
+    //    Serial.println(factor);
+    //    Serial.println();
 
     if (factor <= 1 && factor >= 0)
     {
@@ -209,6 +269,7 @@ void DotstarAnimator::drawAnimatedGradients()
 
     float perc = (float)i / (float)NUMPIXELS;
     float animPerc = (millis() - animatedGradientsStartTime) / 1000.0;
+    //    Serial.println("animPerc " + String(animPerc));
 
     float r = 0;
     float g = 0;
@@ -297,12 +358,28 @@ void DotstarAnimator::drawStaticGradient()
 
 void DotstarAnimator::setPixelColorGC(uint16_t pixel, byte r, byte g, byte b)
 {
+  //  dotStar.setPixelColor(pixel, dotStar.Color(g, r, b));
   dotStar.setPixelColor(pixel, dotStar.Color(gamma8[g], gamma8[r], gamma8[b]));
+}
+
+void DotstarAnimator::setFadeInCompleted(bool fadeInCompleted)
+{
+  _didFadeIn = fadeInCompleted;
 }
 
 bool DotstarAnimator::didFadeIn()
 {
   return _didFadeIn;
+}
+
+void DotstarAnimator::setWipeInCompleted(bool wipeeInCompleted)
+{
+  _didWipeIn = wipeeInCompleted;
+}
+
+bool DotstarAnimator::didWipeIn()
+{
+  return _didWipeIn;
 }
 
 GradientType DotstarAnimator::getGradientType()
